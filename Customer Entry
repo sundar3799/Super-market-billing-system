@@ -1,0 +1,102 @@
+Imports System.Data.OleDb
+
+Public Class CustomerEntry
+    Dim cn As New OleDbConnection
+    Private Sub Label3_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Label3.Click
+
+    End Sub
+
+    Private Sub CustomerEntry_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+        cn.ConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=E:\Master.accdb"
+        cn.Open()
+        LoadGrid("Select * from TblCustomer")
+    End Sub
+
+    Private Sub BtnInsert_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles BtnInsert.Click
+
+        Dim cmd As New OleDbCommand("insert into TblCustomer values(" & TextBox1.Text & ",'" & TxtCName.Text & "','" & TxtCGender.Text & "','" & TxtCAddress.Text & "','" & TxtCPhone.Text & "')", cn)
+        cmd.ExecuteNonQuery()
+        MsgBox("Saved..")
+        LoadGrid("Select * from TblCustomer")
+        TextBox1.Text = ""
+        TxtCName.Text = ""
+        TxtCGender.Text = ""
+        TxtCAddress.Text = ""
+        TxtCPhone.Text = ""
+    End Sub
+
+    Private Sub LoadGrid(ByVal qry As String)
+        Dim da As New OleDbDataAdapter(qry, cn)
+        Dim dt As New Data.DataTable
+        da.Fill(dt)
+        GridView1.DataSource = dt
+    End Sub
+
+    Private Sub GridView1_CellContentClick(ByVal sender As System.Object, ByVal e As System.Windows.Forms.DataGridViewCellEventArgs) Handles GridView1.CellContentClick
+
+    End Sub
+
+    Private Sub BtnUpdate_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles BtnUpdate.Click
+        Dim cmd As New OleDbCommand("Update TblCustomer set CName='" & TxtCName.Text & "',CGender='" & TxtCGender.Text & "', CAddress='" & TxtCAddress.Text & "', CPhone=" & TxtCPhone.Text & " where CId=" & TextBox1.Text & "", cn)
+        cmd.ExecuteNonQuery()
+        LoadGrid("Select * from TblCustomer")
+        MsgBox("UpDated..")
+
+    End Sub
+
+    
+
+    Private Sub BtnDelete_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles BtnDelete.Click
+        Dim qry As String
+        Dim dr As OleDbDataReader
+        qry = "select * from TblCustomer where CId=" & TextBox1.Text & ""
+        Dim cmd As New OleDbCommand(qry, cn)
+        dr = cmd.ExecuteReader()
+        If dr.Read() Then
+            CustomerEntry_Load()
+        Else
+
+            LoadGrid("Select * from TblCustomer")
+            MsgBox("Not Found..")
+        End If
+    End Sub
+    Public Sub CustomerEntry_Load()
+        Dim qry As String
+        qry = "delete * from TblCustomer where CId=" & TextBox1.Text & ""
+        Dim cmd As New OleDbCommand(qry, cn)
+        cmd.ExecuteNonQuery()
+        MsgBox("Deleted..")
+        LoadGrid("Select * from TblCustomer")
+
+        TextBox1.Text = ""
+        TxtCName.Text = ""
+        TxtCGender.Text = ""
+        TxtCAddress.Text = ""
+        TxtCPhone.Text = ""
+    End Sub
+
+    Private Sub BtnFind_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles BtnFind.Click
+        Dim qry As String
+        Dim dr As OleDbDataReader
+        qry = "select * from TblCustomer where CId=" & TextBox1.Text & ""
+        Dim cmd As New OleDbCommand(qry, cn)
+        dr = cmd.ExecuteReader()
+        If dr.Read() Then
+            TextBox1.Text = dr(0)
+            TxtCName.Text = dr(1)
+            TxtCGender.Text = dr(2)
+            TxtCAddress.Text = dr(3)
+            TxtCPhone.Text = dr(4)
+            LoadGrid("Select * from TblCustomer")
+        Else
+            MsgBox("Not found...")
+
+        End If
+        dr.Close()
+    End Sub
+
+    Private Sub TxtCPhone_TextChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles TxtCPhone.TextChanged
+
+    End Sub
+End Class
+
