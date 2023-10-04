@@ -1,0 +1,127 @@
+Imports System.Data.OleDb
+Public Class BillEntry
+    Dim cn As New OleDbConnection
+
+    
+
+    Private Sub BillEntry_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+        cn.ConnectionString = "provider=Microsoft.ACE.OLEDB.12.0; data source=E:\master.accdb"
+        cn.Open()
+        LoadData("CName", "TblCustomer", CmbCName)
+        LoadData("PId", "TblStock", CmbProdId)
+    End Sub
+
+
+    Private Function GenID() As Integer
+        Dim x As Integer
+        Dim cmd As New OleDbCommand("select max(BillNo) from TblBill", cn)
+        Dim dr As OleDbDataReader
+        dr = cmd.ExecuteReader
+        If dr.Read Then
+            x = dr(0) + 1
+        Else
+            x = 1000
+        End If
+        dr.Close()
+        GenID = x
+    End Function
+
+    Private Sub BtnNew_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles BtnNew.Click
+        TxtBillNo.Text = GenID()
+        TxtBillDate.Text = FormatDateTime(Now, DateFormat.ShortDate)
+        Dim cmd As New OleDbCommand("Delete from BillTemp", cn)
+        cmd.ExecuteNonQuery()
+        Loadgrid()
+    End Sub
+
+    Private Sub CmbProdId_SelectedIndexChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles CmbProdId.SelectedIndexChanged
+        Dim cmd As New OleDbCommand("select Pname,Price from TblStock where PId=" & CmbProdId.Text & "", cn)
+        Dim dr As OleDbDataReader
+        dr = cmd.ExecuteReader
+        If dr.Read Then
+            TxtPName.Text = dr(0)
+            TxtPrice.Text = dr(1)
+
+        Else
+            TxtPName.Text = "--"
+        End If
+        dr.Close()
+        TxtQty.Focus()
+    End Sub
+
+    Private Sub loadgrid()
+        Dim qry As String
+        qry = "select * from BillTemp"
+        Dim da As New OleDbDataAdapter(qry, cn)
+        Dim dt As New Data.DataTable
+        da.Fill(dt)
+        GridItems.DataSource = dt
+    End Sub
+
+    Private Sub BtnAdd_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles BtnAdd.Click
+        Dim cmd As New OleDbCommand("insert into BillTemp values(" & CmbProdId.Text & ",'" & TxtPName.Text & "'," & TxtQty.Text & "," & TxtPrice.Text & "," & TxtTotal.Text & ")", cn)
+        cmd.ExecuteNonQuery()
+        loadgrid()
+        TxtTotalQty.Text = Val(TxtTotalQty.Text) + Val(TxtQty.Text)
+        TxtTotalPrice.Text = Val(TxtTotalPrice.Text) + Val(TxtTotal.Text)
+        CmbProdId.Text = ""
+        TxtPName.Text = ""
+        TxtQty.Text = ""
+        TxtPrice.Text = ""
+        TxtTotal.Text = ""
+        CmbProdId.Focus()
+    End Sub
+
+
+    Private Sub TxtQty_TextChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles TxtQty.TextChanged
+        TxtTotal.Text = Val(TxtQty.Text) * Val(TxtPrice.Text)
+    End Sub
+
+
+Public Sub LoadData(ByVal fldname As String, ByVal Tblname As String, ByVal CmbDName As ComboBox)
+    Dim cmd As New OleDbCommand("select " & fldname & " from " & Tblname, cn)
+    Dim dr As OleDbDataReader
+    dr = cmd.ExecuteReader
+    While dr.Read
+        CmbDName.Items.Add(dr(0))
+    End While
+    dr.Close()
+    End Sub
+
+    Private Sub Button3_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button3.Click
+        Dim qry As String
+        qry = "insert into TblBill values(" & TxtBillNo.Text & ",'" & TxtBillDate.Text & "','" & CmbCName.Text & "','" & TxtCAdd.Text & "'," & TxtTotalQty.Text & "," & TxtTotalPrice.Text & ")"
+        Dim cmd As New OleDbCommand(qry, cn)
+        cmd.ExecuteNonQuery()
+
+
+        Dim dr As OleDbDataReader
+        Dim cmd1 As New OleDbCommand("select * from BillTemp", cn)
+        dr = cmd1.ExecuteReader()
+        While dr.Read()
+            qry = "insert into TblBillDet values(" & TxtBillNo.Text & "," & dr(0) & ",'" & dr(1) & "'," & dr(2) & "," & dr(3) & "," & dr(4) & ")"
+            Dim cmd2 As New OleDbCommand(qry, cn)
+            cmd2.ExecuteNonQuery()
+
+            qry = "Update TblStock set quantity=quantity-" & dr(2) & ", Price=" & dr(3) & " where Pid=" & dr(0) & ""
+            Dim cmd3 As New OleDbCommand(qry, cn)
+            cmd3.ExecuteNonQuery()
+        End While
+        dr.Close()
+
+        MsgBox("Updated..")
+
+    End Sub
+
+    Private Sub CmbCName_SelectedIndexChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles CmbCName.SelectedIndexChanged
+        Dim cmd As New OleDbCommand("select CAddress from TblCustomer where CName='" & CmbCName.Text & "'", cn)
+        Dim dr As OleDbDataReader
+        dr = cmd.ExecuteReader
+        If dr.Read Then
+            TxtCAdd.Text = dr(0)
+        Else
+            TxtCAdd.Text = "--"
+        End If
+        dr.Close()
+    End Sub
+End Class
