@@ -1,0 +1,42 @@
+Imports System.Data.OleDb
+Public Class LoginForm
+
+    ' TODO: Insert code to perform custom authentication using the provided username and password 
+    ' (See http://go.microsoft.com/fwlink/?LinkId=35339).  
+    ' The custom principal can then be attached to the current thread's principal as follows: 
+    '     My.User.CurrentPrincipal = CustomPrincipal
+    ' where CustomPrincipal is the IPrincipal implementation used to perform authentication. 
+    ' Subsequently, My.User will return identity information encapsulated in the CustomPrincipal object
+    ' such as the username, display name, etc.
+    Dim cn As New OleDbConnection
+    Private Sub OK_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles OK.Click
+        Dim cmd As New OleDbCommand("select * from TblLogin where UName='" & UsernameTextBox.Text & "' and Passwd='" & PasswordTextBox.Text & "'", cn)
+        Dim dr As OleDbDataReader
+        dr = cmd.ExecuteReader()
+        If dr.Read Then
+            'Me.Close()
+            MDISuperMarket.Show()
+        Else
+            MsgBox("Username or Password Mismatch...", MsgBoxStyle.Critical)
+            UsernameTextBox.Text = ""
+            PasswordTextBox.Text = ""
+        End If
+    End Sub
+
+    Private Sub Cancel_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Cancel.Click
+        Me.Close()
+    End Sub
+
+    Private Sub LoginForm_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+        cn.ConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=E:\master.accdb"
+        cn.Open()
+    End Sub
+
+    Private Sub UsernameLabel_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles UsernameLabel.Click
+
+    End Sub
+
+    Private Sub Label1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs)
+
+    End Sub
+End Class
